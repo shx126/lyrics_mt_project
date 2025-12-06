@@ -85,5 +85,5 @@ void display_window(const LrcContext *ctx, long long now_ms) {
         }
     }
 
-    printf("\n[时间] %.2f 秒（Ctrl+C 退出）\n", now_ms / 1000.0);
+    printf("\n[时间] %.2f 秒（回车退出）\n", now_ms / 1000.0);
 }

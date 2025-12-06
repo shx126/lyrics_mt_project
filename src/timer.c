@@ -1,8 +1,9 @@
 #include "timer.h"
 #include <unistd.h>
 #include <sys/time.h>
+#include <stdlib.h>
 
-// 创建计时器上下文
+// 创建计时器上下文：演示“结构体+初始化+互斥锁”
 TimerContext* create_timer_context(void) {
     TimerContext *ctx = (TimerContext*)malloc(sizeof(TimerContext));
     if (ctx) {
@@ -13,7 +14,7 @@ TimerContext* create_timer_context(void) {
     return ctx;
 }
 
-// 释放计时器上下文
+// 释放计时器上下文：对应 create，教学强调“成对释放”和销毁锁
 void free_timer_context(TimerContext *ctx) {
     if (ctx) {
         pthread_mutex_destroy(&ctx->mutex);
@@ -21,7 +22,7 @@ void free_timer_context(TimerContext *ctx) {
     }
 }
 
-// 获取当前时间
+// 获取当前时间：演示“加锁读共享变量”
 long long get_current_time(TimerContext *ctx) {
     long long ms;
     pthread_mutex_lock(&ctx->mutex);
@@ -30,7 +31,7 @@ long long get_current_time(TimerContext *ctx) {
     return ms;
 }
 
-// 设置停止标志
+// 设置停止标志：线程间通信用布尔标志
 void set_stop_flag(TimerContext *ctx, int flag) {
     pthread_mutex_lock(&ctx->mutex);
     ctx->stop_flag = flag;
@@ -46,7 +47,7 @@ int get_stop_flag(TimerContext *ctx) {
     return flag;
 }
 
-// 计时线程函数
+// 计时线程函数：教学重点“线程里循环 + 睡眠 + 更新时间 + 检查退出条件”
 void* timer_thread_func(void *arg) {
     TimerContext *ctx = (TimerContext*)arg;
     struct timeval start, now;

@@ -1,6 +1,7 @@
 #include "lrc_parser.h"
 
-// 解析 [mm:ss.xxx] → 毫秒，忽略毫秒位数超过 3 位的部分，避免异常的大时间戳
+// 教学提示：解析 [mm:ss.xxx] → 毫秒，演示“字符串拆分 + atoi”
+// 额外处理：毫秒超过 3 位则截断，避免异常时间戳
 int parse_time_ms(const char *str) {
     const char *colon = strchr(str, ':');
     if (!colon || colon == str) return 0;
@@ -39,7 +40,7 @@ int parse_time_ms(const char *str) {
     return ms;
 }
 
-// 解析一行 LRC，如 "[01:23.45]这一刻"
+// 教学提示：解析一行 LRC，如 "[01:23.45]这一刻"
 int parse_lrc_line(const char *line, int *time_ms, char *text_out) {
     const char *L = strchr(line, '[');
     const char *R = strchr(line, ']');
@@ -59,7 +60,7 @@ int parse_lrc_line(const char *line, int *time_ms, char *text_out) {
     return 1;
 }
 
-// 按时间排序插入（简单插入排序）
+// 按时间排序插入（简单插入排序）：教学说明“边读边排”
 void insert_sorted(LrcContext *ctx, int t, const char *text) {
     int i = ctx->line_count;
     while (i > 0 && t < ctx->lines[i - 1].time_ms) {
@@ -72,7 +73,7 @@ void insert_sorted(LrcContext *ctx, int t, const char *text) {
     ctx->line_count++;
 }
 
-// 载入 LRC 文件
+// 载入 LRC 文件：教学说明“文件循环读取 + 调用解析 + 存入上下文”
 int load_lrc(LrcContext *ctx, const char *file) {
     FILE *fp = fopen(file, "r");
     if (!fp) {
@@ -102,7 +103,7 @@ int load_lrc(LrcContext *ctx, const char *file) {
     return 0;
 }
 
-// 创建歌词上下文
+// 创建/释放歌词上下文：演示“malloc + 默认值”
 LrcContext* create_lrc_context(void) {
     LrcContext *ctx = (LrcContext*)malloc(sizeof(LrcContext));
     if (ctx) {
