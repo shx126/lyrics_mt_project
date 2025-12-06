@@ -27,8 +27,8 @@ lyrics_mt_project/
 │   ├── timer.c         # 定时器线程，监控播放进度
 │   └── utils.c         # 字符串处理、UTF-8 支持等工具函数
 ├── test_data/          # 测试数据目录
-│   ├── sample.lrc      # 示例歌词文件
-│   └── sample.mp3      # 示例音频文件
+│   ├── test.lrc      # 示例歌词文件
+│   └── test.mp3      # 示例音频文件
 ├── .gitignore          # Git 忽略规则配置
 ├── Makefile            # 编译脚本
 └── README.md           # 项目说明文档

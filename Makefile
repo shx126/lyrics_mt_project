@@ -9,7 +9,7 @@ BIN_DIR = bin
 INCLUDE_DIR = include
 
 # Target
-TARGET = $(BIN_DIR)/lyrics_player
+TARGET := $(BIN_DIR)/lyrics_player
 
 # Source files
 SRCS = $(wildcard $(SRC_DIR)/*.c)
@@ -41,8 +41,8 @@ clean:
 	rm -rf $(BUILD_DIR) $(BIN_DIR)
 
 # Run the program (example usage)
-run: $(TARGET)
-	./$(TARGET) /test_data/song.mp3 /test_data/lyrics.lrc
+run: $(TARGET) 
+	./$(TARGET) test_data/test.mp3 test_data/test.lrc
 
 # Debug target
 debug: CFLAGS += -DDEBUG -O0
