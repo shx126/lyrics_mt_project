@@ -52,7 +52,7 @@ void* timer_thread_func(void *arg) {
     struct timeval start, now;
     gettimeofday(&start, NULL);
 
-    while (1) {
+    while (!get_stop_flag(ctx)) {
         usleep(50 * 1000); // 50ms
 
         gettimeofday(&now, NULL);
@@ -62,10 +62,7 @@ void* timer_thread_func(void *arg) {
 
         pthread_mutex_lock(&ctx->mutex);
         ctx->current_ms = ms;
-        int stop = ctx->stop_flag;
         pthread_mutex_unlock(&ctx->mutex);
-
-        if (stop) break;
     }
     return NULL;
 }

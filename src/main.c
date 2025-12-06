@@ -27,7 +27,7 @@ void signal_handler(int sig) {
 void* display_thread_func(void *arg) {
     LrcContext *ctx = (LrcContext*)arg;
     
-    while (!g_should_exit) {
+    while (!g_should_exit && !get_stop_flag(timer_ctx)) {
         long long ms = get_current_time(timer_ctx);
         
         display_window(ctx, ms);
@@ -83,6 +83,18 @@ int main(int argc, char *argv[]) {
     pthread_t tid_timer, tid_display;
     pthread_create(&tid_timer, NULL, timer_thread_func, timer_ctx);
     pthread_create(&tid_display, NULL, display_thread_func, lrc_ctx);
+
+    // 主线程根据歌词时间决定退出：最后一句时间 + 缓冲 3 秒
+    const long long end_ms = lrc_ctx->last_time_ms + 3000;
+    while (!g_should_exit &&
+           !get_stop_flag(timer_ctx) &&
+           get_current_time(timer_ctx) <= end_ms) {
+        usleep(100 * 1000);
+    }
+
+    // 到时间或收到退出信号时，通知计时器线程退出
+    set_stop_flag(timer_ctx, 1);
+    g_should_exit = 1;
 
     // 等待线程结束
     pthread_join(tid_timer, NULL);
