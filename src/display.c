@@ -2,7 +2,7 @@
 #include "utils.h"
 #include <stdio.h>
 
-// 逐字高亮打印某一行（UTF-8版本）
+// 教学提示：逐字高亮打印一行，演示“先数字符，再切片输出”
 void print_line_with_highlight_utf8(const char *text, int highlight_chars) {
     int total_bytes = strlen(text);
 
@@ -38,7 +38,7 @@ void print_line_with_highlight_utf8(const char *text, int highlight_chars) {
 void display_window(const LrcContext *ctx, long long now_ms) {
     if (ctx->line_count == 0) return;
 
-    // 找到当前行 index
+    // 教学提示：找到当前行 index（线性扫描够用，便于学生理解）
     int idx = 0;
     while (idx + 1 < ctx->line_count &&
            now_ms >= ctx->lines[idx + 1].time_ms) {
@@ -66,7 +66,7 @@ void display_window(const LrcContext *ctx, long long now_ms) {
         highlight_chars = (int)(ratio * line_len + 0.5);
     }
 
-    clear_screen();
+    clear_screen(); // 教学提示：用 ANSI 转义清屏，模拟“刷新”效果
 
     int win = 9;
     int half = win / 2;

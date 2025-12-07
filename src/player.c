@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-// 启动 mplayer 并返回子进程 pid，便于退出时结束播放
+// 教学提示：通过 shell 启动 mplayer，拿到子进程 pid，后续好停止播放
 pid_t start_mplayer_background(const char *song) {
     char cmd[512];
     snprintf(cmd, sizeof(cmd),
