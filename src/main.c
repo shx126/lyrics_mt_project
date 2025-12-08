@@ -1,38 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include "utils.h"
 #include "lrc_parser.h"
 #include "display.h"
 #include "timer.h"
 #include "player.h"
 
-// 全局变量（上下文）
+// === 教学提示：这里的全局指针在多个函数/线程间共享，方便大家专注流程，不用传很多参数 ===
 static LrcContext *lrc_ctx = NULL;
 static TimerContext *timer_ctx = NULL;
 static volatile int g_should_exit = 0;
-
-// 信号处理函数
-void signal_handler(int sig) {
-    if (sig == SIGINT) {
-        printf("\n接收到 Ctrl+C，正在退出...\n");
-        g_should_exit = 1;
-        if (timer_ctx) {
-            set_stop_flag(timer_ctx, 1);
-        }
-    }
-}
 
 // 显示线程函数
 void* display_thread_func(void *arg) {
     LrcContext *ctx = (LrcContext*)arg;
     
-    while (!g_should_exit) {
+    while (!g_should_exit && !get_stop_flag(timer_ctx)) {
         long long ms = get_current_time(timer_ctx);
         
         display_window(ctx, ms);
 
-        // 超过最后一行一段时间后自动退出
+        // 教学提示：超过最后一句时间 + 5s 自动收尾，演示“线程内自行判断退出条件”
         if (ms > ctx->last_time_ms + 5000) {
             set_stop_flag(timer_ctx, 1);
             g_should_exit = 1;
@@ -53,10 +43,7 @@ int main(int argc, char *argv[]) {
     const char *song = argv[1];
     const char *lrc  = argv[2];
 
-    // 设置信号处理
-    signal(SIGINT, signal_handler);
-
-    // 初始化上下文
+    // 教学提示：初始化数据上下文，后续模块（解析、计时）都需要
     lrc_ctx = create_lrc_context();
     timer_ctx = create_timer_context();
     
@@ -65,7 +52,7 @@ int main(int argc, char *argv[]) {
         goto cleanup;
     }
 
-    // 加载歌词
+    // 教学提示：调用解析模块，失败要及时退出
     if (load_lrc(lrc_ctx, lrc) != 0 || lrc_ctx->line_count == 0) {
         fprintf(stderr, "载入歌词失败或内容为空。\n");
         goto cleanup;
@@ -76,13 +63,47 @@ int main(int argc, char *argv[]) {
     printf("按回车开始播放...\n");
     getchar();
 
-    // 启动音乐
-    start_mplayer_background(song);
+    // 教学提示：启动外部播放器并记录 pid，后面好“善后”
+    pid_t mplayer_pid = start_mplayer_background(song);
+    if (mplayer_pid <= 0) {
+        fprintf(stderr, "启动 mplayer 失败。\n");
+        goto cleanup;
+    }
 
-    // 启动线程
+    // 教学提示：一个线程计时，一个线程显示，主线程做控制
     pthread_t tid_timer, tid_display;
     pthread_create(&tid_timer, NULL, timer_thread_func, timer_ctx);
     pthread_create(&tid_display, NULL, display_thread_func, lrc_ctx);
+
+    // 教学提示：非阻塞 stdin，避免 getchar 卡住主循环
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    if (flags != -1) {
+        fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+    }
+
+    // 教学提示：主循环的两个退出条件——时间到或用户回车
+    const long long end_ms = lrc_ctx->last_time_ms + 3000;
+    while (!g_should_exit && !get_stop_flag(timer_ctx)) {
+        long long now = get_current_time(timer_ctx);
+        if (now > end_ms) {
+            g_should_exit = 1;
+            break;
+        }
+
+        int ch = getchar();
+        if (ch == '\n') {
+            g_should_exit = 1;
+            break;
+        }
+        usleep(100 * 1000);
+    }
+
+    // 到时间或收到退出信号时，通知计时器线程退出
+    set_stop_flag(timer_ctx, 1);
+    g_should_exit = 1;
+
+    // 停止音乐播放（演示“资源收尾”）
+    stop_mplayer(mplayer_pid);
 
     // 等待线程结束
     pthread_join(tid_timer, NULL);

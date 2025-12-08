@@ -1,6 +1,6 @@
 #include "utils.h"
 
-// 字符串去掉末尾 \r \n
+// 教学提示：工具函数，演示“就地修改字符串”去掉行末 \r \n
 void trim_newline(char *s) {
     int len = strlen(s);
     while (len > 0 && (s[len - 1] == '\n' || s[len - 1] == '\r')) {
@@ -9,7 +9,7 @@ void trim_newline(char *s) {
     }
 }
 
-// 计算 UTF-8 字符串中，前 n 个"字符"占用多少字节
+// 教学提示：UTF-8 字节数计算，用于逐字高亮，重点在“多字节字符长度判断”
 int utf8_bytes_for_chars(const char *s, int n_chars) {
     int bytes = 0;
     int count = 0;
